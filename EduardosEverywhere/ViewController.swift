@@ -14,6 +14,7 @@ import CoreMedia
 class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
 
     @IBOutlet weak var previewView: PreviewView?
+    @IBOutlet weak var rectsView: RectsView?
 
     private let session = AVCaptureSession()
 
@@ -49,7 +50,8 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     }
 
     private func drawVisionRequestResults(_ results: [VNObservation]) {
-        print("results: \(results)")
+        let rects = results.flatMap { $0 as? VNRectangleObservation }
+        rectsView?.rects = rects
     }
 
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
