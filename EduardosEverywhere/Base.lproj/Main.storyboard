@@ -27,22 +27,26 @@
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9Sf-Q7-Lz2" customClass="RectsView" customModule="EduardosEverywhere" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="20" width="375" height="647"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="375" id="aMu-X6-nlw"/>
+                                </constraints>
                             </view>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="sFm-B5-Coj" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="1c8-Zq-0nI"/>
-                            <constraint firstItem="9Sf-Q7-Lz2" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="4BP-gv-Jc0"/>
+                            <constraint firstItem="9Sf-Q7-Lz2" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="1oL-7m-nFF"/>
                             <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="sFm-B5-Coj" secondAttribute="bottom" id="Prt-r4-Zo8"/>
                             <constraint firstItem="sFm-B5-Coj" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" id="VQb-6b-wDJ"/>
                             <constraint firstItem="9Sf-Q7-Lz2" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" id="a86-Af-6Kn"/>
                             <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="9Sf-Q7-Lz2" secondAttribute="bottom" id="iPA-Mo-TsB"/>
                             <constraint firstAttribute="trailing" secondItem="sFm-B5-Coj" secondAttribute="trailing" id="jNp-Wt-NzW"/>
-                            <constraint firstAttribute="trailing" secondItem="9Sf-Q7-Lz2" secondAttribute="trailing" id="mfk-cD-pvK"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="previewView" destination="sFm-B5-Coj" id="Be4-3o-OHd"/>
                         <outlet property="rectsView" destination="9Sf-Q7-Lz2" id="yf5-N0-R0u"/>
+                        <outlet property="rectsViewWidth" destination="aMu-X6-nlw" id="chq-fj-qpA"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>

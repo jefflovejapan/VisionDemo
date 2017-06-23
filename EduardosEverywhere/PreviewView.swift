@@ -11,7 +11,7 @@ import AVFoundation
 import Vision
 
 class RectsView: UIView {
-    static let layerCount = 20
+    static let layerCount = 5
     let shapeLayers: [CAShapeLayer] = [0 ..< RectsView.layerCount].map { _ in CAShapeLayer() }
 
     override init(frame: CGRect) {
@@ -40,25 +40,25 @@ class RectsView: UIView {
         }
     }
 
-    var rects: [VNRectangleObservation] = [] {
+    var rects: [Quadrilateral] = [] {
         didSet {
-//            CATransaction.begin()
-//            for layer in shapeLayers {
-//                layer.path = nil
-//            }
-//            for (rect, layer) in zip(rects, shapeLayers) {
-//                let path = UIBezierPath()
-//                path.move(to: rect.topLeft)
-//                path.addLine(to: rect.topRight)
-//                path.addLine(to: rect.bottomRight)
-//                path.addLine(to: rect.bottomLeft)
-//                path.addLine(to: rect.topLeft)
-//                path.close()
-//                path.fill()
-//                path.stroke()
-//                layer.path = path.cgPath
-//            }
-//            CATransaction.commit()
+            CATransaction.begin()
+            for layer in shapeLayers {
+                layer.path = nil
+            }
+            for (rect, layer) in zip(rects, shapeLayers) {
+                let path = UIBezierPath()
+                path.move(to: rect.point0)
+                path.addLine(to: rect.point1)
+                path.addLine(to: rect.point2)
+                path.addLine(to: rect.point3)
+                path.addLine(to: rect.point0)
+                path.close()
+                path.fill()
+                path.stroke()
+                layer.path = path.cgPath
+            }
+            CATransaction.commit()
         }
     }
 }

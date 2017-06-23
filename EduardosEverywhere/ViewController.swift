@@ -15,10 +15,23 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
 
     @IBOutlet weak var previewView: PreviewView?
     @IBOutlet weak var rectsView: RectsView?
+    @IBOutlet weak var rectsViewWidth: NSLayoutConstraint?
 
     private let session = AVCaptureSession()
 
     private var isSessionRunning = false
+    private var imageSize: CGSize = .zero {
+        didSet {
+            guard imageSize != oldValue else { return }
+            let imgSize = imageSize
+            DispatchQueue.main.async {
+                let longDimension = max(imgSize.width, imgSize.height)
+                let shortDimension = min(imgSize.width, imgSize.height)
+                let pointWidth = self.view.bounds.size.height * (shortDimension / longDimension)
+                self.rectsViewWidth?.constant = pointWidth
+            }
+        }
+    }
 
     private let sessionQueue = DispatchQueue(label: "session queue", qos: DispatchQoS.userInteractive)
     private let notificationQueue = OperationQueue()
@@ -28,7 +41,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     func setupVision() {
         let rectRequest = VNDetectRectanglesRequest(completionHandler: self.handleRectangles)
         rectRequest.minimumSize = 0.1
-        rectRequest.maximumObservations = 20
+        rectRequest.maximumObservations = RectsView.layerCount
 
         self.requests.append(rectRequest)
     }
@@ -50,15 +63,21 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     }
 
     private func drawVisionRequestResults(_ results: [VNObservation]) {
-        let rects = results.flatMap { $0 as? VNRectangleObservation }
-        rectsView?.rects = rects
+        guard let rectsView = rectsView else { return }
+        let rectObs = results.flatMap { $0 as? VNRectangleObservation }
+        let rects = rectObs.map { rect in rect.scale(inRect: rectsView.bounds) }
+        rectsView.rects = rects
     }
+
+
 
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             print("couldn't get buffer")
             return
         }
+
+        self.imageSize = CVImageBufferGetDisplaySize(pixelBuffer)
 
         let requestOptions: [VNImageOption: Any]
         if let cameraIntrinsicData = CMGetAttachment(sampleBuffer, kCMSampleBufferAttachmentKey_CameraIntrinsicMatrix, nil) {
@@ -67,7 +86,9 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             requestOptions = [:]
         }
 
-        let exifOrientation = self.exifOrientationFromDeviceOrientation()
+        let orientation = UIDevice.current.orientation
+        print("Our orientation is \(orientation.name)")
+        let exifOrientation = self.exifOrientation(from: orientation)
 
         let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: exifOrientation, options: requestOptions)
         do {
@@ -77,24 +98,14 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         }
     }
 
-    private func exifOrientationFromDeviceOrientation() -> Int32 {
-        switch UIDevice.current.orientation {
-        case .portrait:
-            return 1
-        case .portraitUpsideDown:
-            return 3
-        case .landscapeLeft:
-            return 6
-        case .landscapeRight:
-            return 8
-        default:
-            return 0
-        }
+    private func exifOrientation(from deviceOrientation: UIDeviceOrientation) -> Int32 {
+        return 6
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         previewView?.session = session
+        rectsView?.backgroundColor = UIColor.cyan.withAlphaComponent(0.2)
         setupVision()
 
         guard let device = AVCaptureDevice.default(for: .video) else {
@@ -121,12 +132,59 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         }
         session.startRunning()
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
-
 }
 
+extension CGPoint {
+    func scaleWithInverseOrigin(inRect rect: CGRect) -> CGPoint {
+        var newPoint = CGPoint.zero
+        newPoint.x = rect.minX + (rect.width * self.x)
+        newPoint.y = rect.maxY - (rect.height * self.y)
+        return newPoint
+    }
+}
+
+struct Quadrilateral {
+    var point0: CGPoint
+    var point1: CGPoint
+    var point2: CGPoint
+    var point3: CGPoint
+}
+
+extension Quadrilateral {
+    init() {
+        self.point0 = .zero
+        self.point1 = .zero
+        self.point2 = .zero
+        self.point3 = .zero
+    }
+}
+
+extension VNRectangleObservation {
+    func scale(inRect rect: CGRect) -> Quadrilateral {
+        print("scaling an obs. topLeft: \(self.topLeft), topRight: \(self.topRight), btmRight: \(self.bottomRight), btmLeft: \(self.bottomLeft)")
+        var quad = Quadrilateral()
+        quad.point0 = self.topLeft.scaleWithInverseOrigin(inRect: rect)
+        quad.point1 = self.topRight.scaleWithInverseOrigin(inRect: rect)
+        quad.point2 = self.bottomRight.scaleWithInverseOrigin(inRect: rect)
+        quad.point3 = self.bottomLeft.scaleWithInverseOrigin(inRect: rect)
+        print("calculated quad: \(quad)")
+        return quad
+    }
+}
+
+extension UIDeviceOrientation {
+    var name: String {
+        switch self {
+        case .portrait:
+            return "portrait"
+        case .portraitUpsideDown:
+            return "portraitUpsideDown"
+        case .landscapeLeft:
+            return "landscapeLeft"
+        case .landscapeRight:
+            return "landscapeRight"
+        default:
+            return "weird"
+        }
+    }
+}
