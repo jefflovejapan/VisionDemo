@@ -1,3 +1,5 @@
+![](vision-demo.jpeg)
+
 Messing around trying to duplicate Apple's Vision demo from WWDC '17.
 
 The yellow rects are totally separate from the text onscreen, they're demoing two separate things (Vision finding rects and Inceptionv3 categorizing objects.)
